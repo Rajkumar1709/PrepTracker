@@ -22,7 +22,8 @@ import {
     FormGroup,
     FormControlLabel,
     Checkbox,
-    Divider
+    Divider,
+    Snackbar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddTaskIcon from '@mui/icons-material/AddTask';
@@ -54,6 +55,12 @@ const ProblemTrackerPage = () => {
         Easy: true,
         Medium: true,
         Hard: true,
+    });
+
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
     });
 
     useEffect(() => {
@@ -113,16 +120,25 @@ const ProblemTrackerPage = () => {
                 title: problem.name,
                 platform: 'Varies',
                 link: problem.link,
+                category: problem.category, // Saving the category
                 difficulty: problem.level,
                 status: 'Not Attempted'
             };
             const { data: newProblem } = await axios.post('/api/problems', problemData, config);
-            addProblemToState(newProblem); // Instantly update the global state
-            alert(`'${problem.name}' has been added to your tracked list!`);
+            addProblemToState(newProblem);
+            setSnackbar({ open: true, message: `'${problem.name}' was added to your list!`, severity: 'success' });
         } catch (err) {
-            alert('Failed to track problem. You may already be tracking it.');
+            const errorMessage = err.response?.data?.message || 'Failed to track problem.';
+            setSnackbar({ open: true, message: errorMessage, severity: 'error' });
             console.error(err);
         }
+    };
+    
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackbar({ ...snackbar, open: false });
     };
 
     return (
@@ -213,6 +229,16 @@ const ProblemTrackerPage = () => {
                     )}
                 </Grid>
             </Grid>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

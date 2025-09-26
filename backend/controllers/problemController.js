@@ -13,9 +13,12 @@ export const getProblems = async (req, res) => {
 // @route   POST /api/problems
 // @access  Private
 export const createProblem = async (req, res) => {
-    const { title, platform, link, difficulty, status } = req.body;
+    // This is the new line for debugging
+    console.log('--- Received request body ---:', req.body);
 
-    if (!title || !platform || !link || !difficulty) {
+    const { title, platform, link, category, difficulty, status } = req.body;
+
+    if (!title || !platform || !link || !category || !difficulty) {
         return res.status(400).json({ message: 'Please add all required fields' });
     }
 
@@ -24,6 +27,7 @@ export const createProblem = async (req, res) => {
         title,
         platform,
         link,
+        category,
         difficulty,
         status,
     });
@@ -31,4 +35,22 @@ export const createProblem = async (req, res) => {
     res.status(201).json(problem);
 };
 
-// You can add update and delete functions here later!
+
+// @desc    Update a tracked problem
+// @route   PUT /api/problems/:id
+// @access  Private
+export const updateProblem = async (req, res) => {
+    const problem = await Problem.findById(req.params.id);
+
+    if (!problem) {
+        return res.status(404).json({ message: 'Problem not found' });
+    }
+
+    // Make sure the logged-in user owns the problem
+    if (problem.user.toString() !== req.user.id) {
+        return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json(updatedProblem);
+};

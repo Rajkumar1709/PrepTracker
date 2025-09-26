@@ -9,11 +9,11 @@ export const ProgressProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const { token } = useContext(AuthContext);
 
-    // Fetch all of the user's tracked problems when they log in
     useEffect(() => {
         const fetchTrackedProblems = async () => {
             if (token) {
                 try {
+                    setLoading(true);
                     const config = { headers: { Authorization: `Bearer ${token}` } };
                     const { data } = await axios.get('/api/problems', config);
                     setTrackedProblems(data);
@@ -23,7 +23,6 @@ export const ProgressProvider = ({ children }) => {
                     setLoading(false);
                 }
             } else {
-                // If there's no token, clear problems and stop loading
                 setTrackedProblems([]);
                 setLoading(false);
             }
@@ -31,30 +30,40 @@ export const ProgressProvider = ({ children }) => {
         fetchTrackedProblems();
     }, [token]);
 
-    // This function adds a new problem to our global state instantly
     const addProblemToState = (newProblem) => {
         setTrackedProblems(prevProblems => [...prevProblems, newProblem]);
     };
 
-    // Calculate analytics data. useMemo ensures this only runs when problems change.
+    const updateProblemStatus = (problemId, newStatus) => {
+        setTrackedProblems(prevProblems =>
+            prevProblems.map(p =>
+                p._id === problemId ? { ...p, status: newStatus } : p
+            )
+        );
+    };
+
     const analyticsData = useMemo(() => {
         const statusCounts = { 'Solved': 0, 'Attempted': 0, 'Not Attempted': 0 };
         const difficultyCounts = { 'Easy': 0, 'Medium': 0, 'Hard': 0 };
 
         for (const problem of trackedProblems) {
             if (problem.status) statusCounts[problem.status]++;
-            if (problem.difficulty) difficultyCounts[problem.difficulty]++;
+
+            // Only count difficulty if the problem is SOLVED
+            if (problem.status === 'Solved') {
+                if (problem.difficulty) difficultyCounts[problem.difficulty]++;
+            }
         }
         
         return { statusCounts, difficultyCounts };
     }, [trackedProblems]);
-
 
     const value = {
         trackedProblems,
         analyticsData,
         loading,
         addProblemToState,
+        updateProblemStatus,
     };
 
     return (

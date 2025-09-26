@@ -7,6 +7,7 @@ import cors from 'cors';
 import userRoutes from './routes/user.js';
 import problemRoutes from './routes/problemRoutes.js';
 import masterProblemRoutes from './routes/masterProblemRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -17,8 +18,9 @@ app.use(express.json());
 
 // API Routes - This is the corrected setup
 app.use('/api/users', userRoutes);
-app.use('/api/problems', problemRoutes); // Use the new problem routes
+app.use('/api/problems', problemRoutes); 
 app.use('/api/master-problems', masterProblemRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

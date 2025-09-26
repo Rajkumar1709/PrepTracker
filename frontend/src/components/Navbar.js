@@ -79,6 +79,7 @@ const Navbar = () => {
                             <Box>
                                 <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>
                                 <Button color="inherit" component={Link} to="/tracker">Problem Tracker</Button>
+                                <Button color="inherit" component={Link} to="/my-problems">My Problems</Button>
                                 <Button color="inherit" onClick={handleLogout}>Logout</Button>
                             </Box>
                         )
