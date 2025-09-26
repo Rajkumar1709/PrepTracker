@@ -1,20 +1,11 @@
-// routes/user.js
-
 import { Router } from 'express';
-import User from '../models/User.js';
+import { registerUser, loginUser, getMe } from '../controllers/userController.js';
+import { protect } from '../middleware/authMiddleware.js'; // 1. Import the middleware
 
 const router = Router();
 
-// Route to create a new user
-router.post('/register', async (req, res) => {
-  try {
-    const { username } = req.body;
-    const newUser = new User({ username });
-    await newUser.save();
-    res.status(201).json(newUser);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create user', details: err.message });
-  }
-});
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.get('/me', protect, getMe); // 2. Add this protected route
 
 export default router;

@@ -1,17 +1,21 @@
 // models/Problem.js
-
 import mongoose from 'mongoose';
 
 const problemSchema = new mongoose.Schema({
-  category: {
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User',
+  },
+  title: {
     type: String,
     required: true,
   },
-  name: {
+  platform: {
     type: String,
     required: true,
   },
-  level: {
+  difficulty: {
     type: String,
     enum: ['Easy', 'Medium', 'Hard'],
     required: true,
@@ -22,11 +26,12 @@ const problemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['To Do', 'In Progress', 'Completed'],
-    default: 'To Do',
+    enum: ['Not Attempted', 'Attempted', 'Solved'],
+    default: 'Not Attempted',
   },
+}, {
+  timestamps: true,
 });
 
 const Problem = mongoose.model('Problem', problemSchema);
-
 export default Problem;
