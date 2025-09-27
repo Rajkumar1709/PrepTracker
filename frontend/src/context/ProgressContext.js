@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useMemo } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { AuthContext } from './AuthContext';
 
 export const ProgressContext = createContext();
@@ -29,7 +29,7 @@ export const ProgressProvider = ({ children }) => {
                 setLoading(true);
                 try {
                     const config = { headers: { Authorization: `Bearer ${token}` } };
-                    const { data } = await axios.get('/api/problems', config);
+                    const { data } = await api.get('/api/problems', config);
                     setTrackedProblems(data);
                 } catch (error) {
                     console.error("Failed to fetch tracked problems", error);
@@ -67,7 +67,7 @@ export const ProgressProvider = ({ children }) => {
                 difficulty: problem.level,
                 status: 'Not Attempted'
             };
-            const { data: newProblem } = await axios.post('/api/problems', problemData, config);
+            const { data: newProblem } = await api.post('/api/problems', problemData, config);
             addProblemToState(newProblem);
             return { success: true, message: `'${problem.name}' was added to your list!` };
         } catch (err) {

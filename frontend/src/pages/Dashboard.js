@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Typography, Grid, Paper, Box, CircularProgress, useTheme, Card, CardContent, CardActions, Button, Chip, Link, Stack } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { ProgressContext } from '../context/ProgressContext';
 
@@ -65,7 +65,7 @@ const Dashboard = () => {
             if (token) {
                 try {
                     const config = { headers: { Authorization: `Bearer ${token}` } };
-                    const { data } = await axios.get('/api/analytics', config);
+                    const { data } = await api.get('/api/analytics', config);
                     setAnalytics(data);
                 } catch (error) {
                     console.error("Failed to fetch analytics", error);
@@ -82,7 +82,7 @@ const Dashboard = () => {
             if (token) {
                 try {
                     const config = { headers: { Authorization: `Bearer ${token}` } };
-                    const { data } = await axios.get('/api/daily-challenge', config);
+                    const { data } = await api.get('/api/daily-challenge', config);
                     setDailyChallenge(data);
                 } catch (error) {
                     console.error("Failed to fetch daily challenge", error);

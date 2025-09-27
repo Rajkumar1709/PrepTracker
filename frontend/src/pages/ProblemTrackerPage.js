@@ -29,7 +29,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import AddTaskIcon from '@mui/icons-material/AddTask';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { ProgressContext } from '../context/ProgressContext';
 
@@ -82,7 +82,7 @@ const ProblemTrackerPage = () => {
             if (token) {
                 try {
                     const config = { headers: { Authorization: `Bearer ${token}` } };
-                    const { data } = await axios.get('/api/mandatory-problems', config);
+                    const { data } = await api.get('/api/mandatory-problems', config);
                     setMandatoryProblems(data);
                 } catch (error) {
                     console.error('Failed to fetch mandatory problems', error);
@@ -98,7 +98,7 @@ const ProblemTrackerPage = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const { data } = await axios.get('/api/master-problems/categories');
+                const { data } = await api.get('/api/master-problems/categories');
                 setCategories(data);
                 if (data.length > 0) {
                     setSelectedCategory(data[0]);
@@ -120,7 +120,7 @@ const ProblemTrackerPage = () => {
             if (!selectedCategory) return;
             try {
                 setLoading(true);
-                const { data } = await axios.get(`/api/master-problems?category=${selectedCategory}`);
+                const { data } = await api.get(`/api/master-problems?category=${selectedCategory}`);
                 setMasterProblems(data);
                 setError('');
             } catch (err) {

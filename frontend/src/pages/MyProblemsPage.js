@@ -2,7 +2,7 @@ import React, { useContext, useState, useMemo, useEffect } from 'react';
 import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Link, Chip, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { ProgressContext } from '../context/ProgressContext';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 
 // Helper function for styling difficulty chips
 const getDifficultyChip = (difficulty) => {
@@ -36,7 +36,7 @@ const MyProblemsPage = () => {
         const fetchAllCategories = async () => {
             try {
                 // This fetches ALL possible categories for the filter dropdown
-                const { data } = await axios.get('/api/master-problems/categories');
+                const { data } = await api.get('/api/master-problems/categories');
                 setAllCategories(['All', ...data.sort()]);
             } catch (error) {
                 console.error("Failed to fetch all categories", error);
@@ -56,7 +56,7 @@ const MyProblemsPage = () => {
         const newStatus = isChecked ? 'Solved' : 'Not Attempted';
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.put(`/api/problems/${problem._id}`, { status: newStatus }, config);
+            await api.put(`/api/problems/${problem._id}`, { status: newStatus }, config);
             updateProblemStatus(problem._id, newStatus);
         } catch (error) {
             console.error('Failed to update status', error);

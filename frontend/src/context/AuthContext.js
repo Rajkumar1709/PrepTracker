@@ -1,7 +1,7 @@
 // frontend/src/context/AuthContext.js
 
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 
 export const AuthContext = createContext(null);
 
@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                         headers: { Authorization: `Bearer ${token}` }
                     };
                     // This route needs to be created in the backend
-                    const res = await axios.get('/api/users/me', config);
+                    const res = await api.get('/api/users/me', config);
                     setUser(res.data);
                 } catch (err) {
                     console.error('Could not fetch user', err);

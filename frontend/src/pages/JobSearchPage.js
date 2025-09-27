@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import api from '../api/axiosConfig';
 import {
     Container,
     Typography,
@@ -24,7 +25,6 @@ import {
     Stack,
     Pagination
 } from '@mui/material'; // REMOVED 'Alert' from this line
-import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 const JOB_TITLES = ['All Titles', 'Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'DevOps Engineer', 'Data Scientist'];
@@ -69,7 +69,7 @@ const JobSearchPage = () => {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { searchQuery, location, date_posted: datePosted, page: currentPage }
             };
-            const { data } = await axios.get('/api/jobs', config);
+            const { data } = await api.get('/api/jobs', config);
             setJobs(data || []);
         } catch (err) {
             // We log the error, but don't need to set an error state for now.

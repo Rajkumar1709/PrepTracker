@@ -5,7 +5,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, FormControl, InputLabel, Select
 } from '@mui/material';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 
 const ProblemFormModal = ({ open, onClose, onSubmitSuccess, problemToEdit }) => {
@@ -34,9 +34,9 @@ const ProblemFormModal = ({ open, onClose, onSubmitSuccess, problemToEdit }) => 
 
         try {
             if (problemToEdit) {
-                await axios.put(`/api/problems/${problemToEdit._id}`, formData, config);
+                await api.put(`/api/problems/${problemToEdit._id}`, formData, config);
             } else {
-                await axios.post('/api/problems', formData, config);
+                await api.post('/api/problems', formData, config);
             }
             onSubmitSuccess();
         } catch (err) {
