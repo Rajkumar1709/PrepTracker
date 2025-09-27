@@ -27,17 +27,32 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddTaskIcon from '@mui/icons-material/AddTask';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { ProgressContext } from '../context/ProgressContext';
 
-// Helper function for styling difficulty chips
+// Helper for difficulty chips
 const getDifficultyChip = (level) => {
     switch (level) {
         case 'Easy': return <Chip label="Easy" color="success" size="small" />;
         case 'Medium': return <Chip label="Medium" color="warning" size="small" />;
         case 'Hard': return <Chip label="Hard" color="error" size="small" />;
         default: return <Chip label={level} size="small" />;
+    }
+};
+
+// Helper to get the platform name from a URL
+const getPlatformFromUrl = (url) => {
+    try {
+        const hostname = new URL(url).hostname;
+        if (hostname.includes('leetcode')) return 'LeetCode';
+        if (hostname.includes('geeksforgeeks')) return 'GeeksforGeeks';
+        if (hostname.includes('hackerrank')) return 'HackerRank';
+        if (hostname.includes('interviewbit')) return 'InterviewBit';
+        return hostname;
+    } catch (e) {
+        return 'Unknown';
     }
 };
 
@@ -118,9 +133,9 @@ const ProblemTrackerPage = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const problemData = {
                 title: problem.name,
-                platform: 'Varies',
+                platform: getPlatformFromUrl(problem.link),
                 link: problem.link,
-                category: problem.category, // Saving the category
+                category: problem.category,
                 difficulty: problem.level,
                 status: 'Not Attempted'
             };
@@ -143,8 +158,8 @@ const ProblemTrackerPage = () => {
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-                DSA PROBLEMS FOR PLACEMENT PREPARATION
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                DSA Problems for Placement Preparation
             </Typography>
             <Grid container spacing={4}>
                 <Grid item xs={12} md={3}>
@@ -190,28 +205,47 @@ const ProblemTrackerPage = () => {
                         <Stack spacing={2}>
                             {filteredProblems.length > 0 ? (
                                 filteredProblems.map(problem => (
-                                    <Card key={problem._id} variant="outlined">
-                                        <CardContent>
-                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                <Typography variant="h6" component="div">
-                                                    {problem.name}
-                                                </Typography>
+                                    <Card 
+                                        key={problem._id} 
+                                        variant="outlined"
+                                        sx={{
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: 3,
+                                            transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                                            '&:hover': {
+                                                transform: 'translateY(-5px)',
+                                                boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                                            }
+                                        }}
+                                    >
+                                        <CardContent sx={{ pb: 1 }}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                <Box>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {getPlatformFromUrl(problem.link)}
+                                                    </Typography>
+                                                    <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
+                                                        {problem.name}
+                                                    </Typography>
+                                                </Box>
                                                 {getDifficultyChip(problem.level)}
                                             </Stack>
                                         </CardContent>
-                                        <CardActions sx={{ justifyContent: 'flex-end', pr: 2, pb: 2 }}>
+                                        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                                             <Button
                                                 variant="text"
                                                 component={Link}
                                                 href={problem.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
+                                                startIcon={<OpenInNewIcon />}
                                             >
                                                 View Problem
                                             </Button>
                                             <Button
                                                 variant="contained"
-                                                size="small"
                                                 startIcon={<AddTaskIcon />}
                                                 onClick={() => handleTrackProblem(problem)}
                                             >
