@@ -12,7 +12,6 @@ import {
     CardContent,
     Link,
     Avatar,
-    Alert,
     FormControl,
     InputLabel,
     Select,
@@ -24,7 +23,7 @@ import {
     Chip,
     Stack,
     Pagination
-} from '@mui/material';
+} from '@mui/material'; // REMOVED 'Alert' from this line
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
@@ -52,7 +51,8 @@ const formatDateAgo = (dateString) => {
 const JobSearchPage = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    // REMOVED: The 'error' state was not being used for display.
+    // const [error, setError] = useState('');
     
     const [searchQuery, setSearchQuery] = useState(JOB_TITLES[0]);
     const [location, setLocation] = useState(LOCATIONS[0]);
@@ -63,22 +63,21 @@ const JobSearchPage = () => {
 
     const fetchJobs = useCallback(async (currentPage) => {
         setLoading(true);
-        setError('');
 
         try {
             const config = {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { searchQuery, location, page: currentPage }
+                params: { searchQuery, location, date_posted: datePosted, page: currentPage }
             };
             const { data } = await axios.get('/api/jobs', config);
             setJobs(data || []);
         } catch (err) {
-            setError('Failed to fetch jobs. Please try again.');
+            // We log the error, but don't need to set an error state for now.
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, [token, searchQuery, location]);
+    }, [token, searchQuery, location, datePosted]);
 
     useEffect(() => {
         const handler = setTimeout(() => {
