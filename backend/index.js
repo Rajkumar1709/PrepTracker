@@ -8,6 +8,7 @@ import userRoutes from './routes/user.js';
 import problemRoutes from './routes/problemRoutes.js';
 import masterProblemRoutes from './routes/masterProblemRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -21,6 +22,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/problems', problemRoutes); 
 app.use('/api/master-problems', masterProblemRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

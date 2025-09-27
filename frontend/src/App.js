@@ -13,6 +13,7 @@ import ProblemTrackerPage from './pages/ProblemTrackerPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import MyProblemsPage from './pages/MyProblemsPage';
+import JobSearchPage from './pages/JobSearchPage';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tracker" element={<ProblemTrackerPage />} />
           <Route path="/my-problems" element={<MyProblemsPage />} />
+          <Route path="/jobs" element={<JobSearchPage />} />
         </Route>
       </Routes>
     </Router>

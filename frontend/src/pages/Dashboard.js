@@ -1,16 +1,47 @@
 import React, { useState, useEffect, useContext } from 'react';
-import {
-    Container,
-    Typography,
-    Grid,
-    Paper,
-    Box,
-    CircularProgress,
-    LinearProgress,
-    Divider
-} from '@mui/material';
+import { Container, Typography, Grid, Paper, Box, CircularProgress, useTheme } from '@mui/material';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+
+// --- Reusable Chart Components ---
+
+// Donut chart for Status Breakdown
+const StatusPieChart = ({ data }) => {
+    const theme = useTheme();
+    const COLORS = [theme.palette.success.main, theme.palette.warning.main, theme.palette.grey[500]];
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                    {data.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+            </PieChart>
+        </ResponsiveContainer>
+    );
+};
+
+// Bar chart for Difficulty Breakdown
+const DifficultyBarChart = ({ data }) => {
+    const theme = useTheme();
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="tracked" fill={theme.palette.grey[500]} name="Tracked" />
+                <Bar dataKey="solved" fill={theme.palette.primary.main} name="Solved" />
+            </BarChart>
+        </ResponsiveContainer>
+    );
+};
+
+
+// --- Main Dashboard Component ---
 
 const Dashboard = () => {
     const [analytics, setAnalytics] = useState(null);
@@ -42,59 +73,46 @@ const Dashboard = () => {
         return <Typography sx={{ textAlign: 'center', mt: 4 }}>Could not load analytics data.</Typography>;
     }
 
-    const { solvedStats, totalStats, categoryStats } = analytics;
+    // Filter out zero-value entries for the pie chart to prevent overlapping labels
+    const statusChartData = analytics.statusCounts.filter(entry => entry.value > 0);
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" gutterBottom>
-                {`Welcome, ${user?.name || 'User'}`}
+                Welcome, {user?.name || 'User'}!
             </Typography>
             <Grid container spacing={3}>
-                <Grid item xs={12} md={5}>
-                    <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ mb: 2 }}>Problems Solved</Typography>
-                        <Box sx={{ position: 'relative', height: 200, width: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                            {/* Background Tracks */}
-                            <CircularProgress variant="determinate" value={100} size={200} thickness={2.5} sx={{ color: 'divider', position: 'absolute' }} />
-                            <CircularProgress variant="determinate" value={100} size={160} thickness={2.5} sx={{ color: 'divider', position: 'absolute' }} />
-                            <CircularProgress variant="determinate" value={100} size={120} thickness={2.5} sx={{ color: 'divider', position: 'absolute' }} />
-                            
-                            {/* Progress (Using direct HEX color codes to force the change) */}
-                            <CircularProgress variant="determinate" value={totalStats.Easy > 0 ? (solvedStats.easy / totalStats.Easy) * 100 : 0} size={200} thickness={2.5} sx={{ color: '#2e7d32', position: 'absolute' }} />
-                            <CircularProgress variant="determinate" value={totalStats.Medium > 0 ? (solvedStats.medium / totalStats.Medium) * 100 : 0} size={160} thickness={2.5} sx={{ color: '#ed6c02', position: 'absolute' }} />
-                            <CircularProgress variant="determinate" value={totalStats.Hard > 0 ? (solvedStats.hard / totalStats.Hard) * 100 : 0} size={120} thickness={2.5} sx={{ color: '#d32f2f', position: 'absolute' }} />
-                        </Box>
-                        <Box sx={{ width: '100%', textAlign: 'left' }}>
-                            <Typography>Easy: {solvedStats.easy} / {totalStats.easy}</Typography>
-                            <Typography>Medium: {solvedStats.medium} / {totalStats.medium}</Typography>
-                            <Typography>Hard: {solvedStats.hard} / {totalStats.hard}</Typography>
-                        </Box>
+                {/* KPI Cards */}
+                <Grid item xs={12} sm={6} md={4}>
+                    <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+                        <Typography variant="h6" color="text.secondary">Total Problems Tracked</Typography>
+                        <Typography variant="h3" component="div">{analytics.totalTracked}</Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                    <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+                        <Typography variant="h6" color="text.secondary">Total Problems Solved</Typography>
+                        <Typography variant="h3" component="div" color="primary">{analytics.totalSolved}</Typography>
+                    </Paper>
+                </Grid>
+                 <Grid item xs={12} sm={12} md={4}>
+                    <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+                        <Typography variant="h6" color="text.secondary">Solving Rate</Typography>
+                        <Typography variant="h3" component="div">{analytics.totalTracked > 0 ? `${((analytics.totalSolved / analytics.totalTracked) * 100).toFixed(1)}%` : '0.0%'}</Typography>
                     </Paper>
                 </Grid>
 
+                {/* Status and Difficulty Charts */}
+                <Grid item xs={12} md={5}>
+                    <Paper sx={{ p: 2, height: 350 }}>
+                        <Typography variant="h6" align="center" gutterBottom>Status Breakdown</Typography>
+                        <StatusPieChart data={statusChartData} />
+                    </Paper>
+                </Grid>
                 <Grid item xs={12} md={7}>
-                     <Paper sx={{ p: 2, height: '100%' }}>
-                        <Typography variant="h6" gutterBottom>Solved by Topic</Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Box sx={{ maxHeight: 320, overflowY: 'auto' }}>
-                            {Object.keys(categoryStats).length > 0 ? (
-                                <Grid container spacing={2}>
-                                    {Object.entries(categoryStats).map(([category, count]) => (
-                                        <Grid item xs={12} sm={6} key={category}>
-                                            <Box>
-                                                <Typography variant="body1">{category}</Typography>
-                                                <LinearProgress variant="determinate" value={(count / 5) * 100} sx={{ height: 8, borderRadius: 5 }}/>
-                                                <Typography variant="caption" color="text.secondary">{`${count} solved`}</Typography>
-                                            </Box>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            ) : (
-                                <Typography sx={{ pt: 4, textAlign: 'center', color: 'text.secondary' }}>
-                                    Your solved topics will appear here!
-                                </Typography>
-                            )}
-                        </Box>
+                    <Paper sx={{ p: 2, height: 350 }}>
+                        <Typography variant="h6" align="center" gutterBottom>Difficulty Breakdown</Typography>
+                        <DifficultyBarChart data={analytics.difficultyData} />
                     </Paper>
                 </Grid>
             </Grid>

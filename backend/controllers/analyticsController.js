@@ -1,59 +1,61 @@
 import Problem from '../models/Problem.js'; // User's tracked problems
-import MasterProblem from '../models/MasterProblem.js'; // The master list
 
-// @desc    Get user analytics data
+// @desc    Get detailed user analytics data
 // @route   GET /api/analytics
 // @access  Private
 export const getAnalytics = async (req, res) => {
     try {
-        // Fetch user's tracked problems and the entire master problem list concurrently
-        const [userProblems, masterProblems] = await Promise.all([
-            Problem.find({ user: req.user.id }),
-            MasterProblem.find({})
-        ]);
+        const userProblems = await Problem.find({ user: req.user.id });
 
-        // --- Calculate Totals ---
-        const totalProblemsByDifficulty = { Easy: 0, Medium: 0, Hard: 0 };
-        for (const problem of masterProblems) {
-            totalProblemsByDifficulty[problem.level]++;
-        }
+        // 1. Calculate Status Counts
+        const statusCounts = { Solved: 0, Attempted: 0, 'Not Attempted': 0 };
+        userProblems.forEach(p => {
+            if (p.status) statusCounts[p.status]++;
+        });
 
-        // --- Calculate User's Solved Stats ---
-        const solvedProblemsByDifficulty = { Easy: 0, Medium: 0, Hard: 0 };
-        const solvedProblemsByCategory = {};
-
-        for (const problem of userProblems) {
-            // We only count 'Solved' problems for these stats
-            if (problem.status === 'Solved') {
-                solvedProblemsByDifficulty[problem.difficulty]++;
-                
-                // The master problem for this tracked problem needs to be found to get the category
-                const masterDoc = masterProblems.find(p => p.name === problem.title);
-                if (masterDoc) {
-                    const category = masterDoc.category;
-                    if (!solvedProblemsByCategory[category]) {
-                        solvedProblemsByCategory[category] = 0;
-                    }
-                    solvedProblemsByCategory[category]++;
+        // 2. Calculate Difficulty Breakdown (Tracked vs. Solved)
+        const difficultyData = {
+            Easy: { tracked: 0, solved: 0 },
+            Medium: { tracked: 0, solved: 0 },
+            Hard: { tracked: 0, solved: 0 },
+        };
+        userProblems.forEach(p => {
+            if (difficultyData[p.difficulty]) {
+                difficultyData[p.difficulty].tracked++;
+                if (p.status === 'Solved') {
+                    difficultyData[p.difficulty].solved++;
                 }
             }
-        }
+        });
         
+        // 3. Calculate Category Breakdown (Tracked vs. Solved)
+        const categoryData = {};
+        userProblems.forEach(p => {
+            if (!p.category) return; // Skip if no category
+            if (!categoryData[p.category]) {
+                categoryData[p.category] = { tracked: 0, solved: 0 };
+            }
+            categoryData[p.category].tracked++;
+            if (p.status === 'Solved') {
+                categoryData[p.category].solved++;
+            }
+        });
+
         // Structure the final response
         const analytics = {
-            solvedStats: {
-                total: userProblems.filter(p => p.status === 'Solved').length,
-                easy: solvedProblemsByDifficulty.Easy,
-                medium: solvedProblemsByDifficulty.Medium,
-                hard: solvedProblemsByDifficulty.Hard,
-            },
-            totalStats: {
-                total: masterProblems.length,
-                easy: totalProblemsByDifficulty.Easy,
-                medium: totalProblemsByDifficulty.Medium,
-                hard: totalProblemsByDifficulty.Hard,
-            },
-            categoryStats: solvedProblemsByCategory
+            totalTracked: userProblems.length,
+            totalSolved: statusCounts.Solved,
+            statusCounts: [
+                { name: 'Solved', value: statusCounts.Solved },
+                { name: 'Attempted', value: statusCounts.Attempted },
+                { name: 'Not Attempted', value: statusCounts['Not Attempted'] },
+            ],
+            difficultyData: [
+                { name: 'Easy', ...difficultyData.Easy },
+                { name: 'Medium', ...difficultyData.Medium },
+                { name: 'Hard', ...difficultyData.Hard },
+            ],
+            categoryData: Object.entries(categoryData).map(([key, value]) => ({ name: key, ...value })),
         };
 
         res.status(200).json(analytics);

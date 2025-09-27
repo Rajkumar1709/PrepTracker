@@ -14,7 +14,8 @@ import {
     List,
     ListItemButton,
     ListItemIcon,
-    ListItemText
+    ListItemText,
+    Divider
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -22,8 +23,10 @@ import { ThemeContext } from '../context/ThemeContext';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import WorkIcon from '@mui/icons-material/Work';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Navbar = () => {
     const { token, logout } = useContext(AuthContext);
@@ -38,6 +41,13 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    const navLinks = [
+        { text: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
+        { text: 'Problem Browser', path: '/tracker', icon: <ListAltIcon /> },
+        { text: 'My Problems', path: '/my-problems', icon: <AccountCircleIcon /> },
+        { text: 'Jobs', path: '/jobs', icon: <WorkIcon /> }
+    ];
+
     return (
         <AppBar position="static">
             <Toolbar>
@@ -46,7 +56,6 @@ const Navbar = () => {
                 </Typography>
 
                 <Stack direction="row" alignItems="center" spacing={1}>
-                    {/* Theme Toggle Switch */}
                     <Brightness7Icon />
                     <Switch checked={mode === 'dark'} onChange={toggleTheme} color="default" />
                     <Brightness4Icon />
@@ -60,14 +69,13 @@ const Navbar = () => {
                                 <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
                                     <Box sx={{ width: 250 }} role="presentation">
                                         <List>
-                                            <ListItemButton component={Link} to="/dashboard" onClick={() => setDrawerOpen(false)}>
-                                                <ListItemIcon><DashboardIcon /></ListItemIcon>
-                                                <ListItemText primary="Dashboard" />
-                                            </ListItemButton>
-                                            <ListItemButton component={Link} to="/tracker" onClick={() => setDrawerOpen(false)}>
-                                                <ListItemIcon><ListAltIcon /></ListItemIcon>
-                                                <ListItemText primary="Problem Tracker" />
-                                            </ListItemButton>
+                                            {navLinks.map((link) => (
+                                                <ListItemButton key={link.text} component={Link} to={link.path} onClick={() => setDrawerOpen(false)}>
+                                                    <ListItemIcon>{link.icon}</ListItemIcon>
+                                                    <ListItemText primary={link.text} />
+                                                </ListItemButton>
+                                            ))}
+                                            <Divider />
                                             <ListItemButton onClick={() => { setDrawerOpen(false); handleLogout(); }}>
                                                 <ListItemText primary="Logout" sx={{ textAlign: 'center' }}/>
                                             </ListItemButton>
@@ -77,9 +85,11 @@ const Navbar = () => {
                             </>
                         ) : (
                             <Box>
-                                <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>
-                                <Button color="inherit" component={Link} to="/tracker">Problem Tracker</Button>
-                                <Button color="inherit" component={Link} to="/my-problems">My Problems</Button>
+                                {navLinks.map((link) => (
+                                    <Button key={link.text} color="inherit" component={Link} to={link.path}>
+                                        {link.text}
+                                    </Button>
+                                ))}
                                 <Button color="inherit" onClick={handleLogout}>Logout</Button>
                             </Box>
                         )
