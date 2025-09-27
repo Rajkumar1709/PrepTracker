@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box, Alert, IconButton, InputAdornment } from '@mui/material';
-import api from '../api/axiosConfig'; // UPDATED: Use the axios config for deployment
+import api from '../api/axiosConfig'; // Use the configured api object
 import { AuthContext } from '../context/AuthContext';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
@@ -20,7 +20,6 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // UPDATED: Use 'api' instead of 'axios'
             const res = await api.post('/api/users/login', formData);
             login(res.data.token);
             navigate('/dashboard');
@@ -51,7 +50,6 @@ const LoginPage = () => {
                         autoFocus 
                         onChange={handleChange} 
                     />
-
                     <TextField
                         margin="normal"
                         required
@@ -77,7 +75,6 @@ const LoginPage = () => {
                             )
                         }}
                     />
-
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>Sign In</Button>
                     <Link to="/signup" variant="body2">
                         {"Don't have an account? Sign Up"}

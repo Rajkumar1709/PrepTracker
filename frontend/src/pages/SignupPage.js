@@ -1,9 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box, Alert, IconButton, InputAdornment } from '@mui/material';
-import axios from 'axios';
+import api from '../api/axiosConfig'; // Use the configured api object
 import { AuthContext } from '../context/AuthContext';
-import { Visibility, VisibilityOff } from '@mui/icons-material'; // Import icons
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const SignupPage = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -11,7 +11,6 @@ const SignupPage = () => {
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
     
-    // NEW: State to manage password visibility
     const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
@@ -21,7 +20,7 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('/api/users/register', formData);
+            const res = await api.post('/api/users/register', formData);
             login(res.data.token);
             navigate('/dashboard');
         } catch (err) {
@@ -29,7 +28,6 @@ const SignupPage = () => {
         }
     };
 
-    // NEW: Functions to handle the icon click
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
@@ -41,10 +39,27 @@ const SignupPage = () => {
                 <Typography component="h1" variant="h5">Sign Up</Typography>
                 {error && <Alert severity="error" sx={{ width: '100%', mt: 2 }}>{error}</Alert>}
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                    <TextField margin="normal" required fullWidth id="name" label="Name" name="name" autoComplete="name" autoFocus onChange={handleChange} />
-                    <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" autoComplete="email" onChange={handleChange} />
-                    
-                    {/* UPDATED: Password TextField */}
+                    <TextField 
+                        margin="normal" 
+                        required 
+                        fullWidth 
+                        id="name" 
+                        label="Name" 
+                        name="name" 
+                        autoComplete="name" 
+                        autoFocus 
+                        onChange={handleChange} 
+                    />
+                    <TextField 
+                        margin="normal" 
+                        required 
+                        fullWidth 
+                        id="email" 
+                        label="Email Address" 
+                        name="email" 
+                        autoComplete="email" 
+                        onChange={handleChange} 
+                    />
                     <TextField
                         margin="normal"
                         required
@@ -69,7 +84,6 @@ const SignupPage = () => {
                             )
                         }}
                     />
-
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>Sign Up</Button>
                     <Link to="/login" variant="body2">
                         {"Already have an account? Sign In"}
