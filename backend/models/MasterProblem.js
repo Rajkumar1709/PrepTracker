@@ -5,8 +5,9 @@ const masterProblemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   level: { type: String, enum: ['Easy', 'Medium', 'Hard'], required: true },
   link: { type: String, required: true },
+  mandatory: { type: Boolean, default: false }
 }, {
-  // Tell Mongoose to use your existing collection name
+  // Tell Mongoose to use your 'problems' collection for the browser
   collection: 'problems' 
 });
 

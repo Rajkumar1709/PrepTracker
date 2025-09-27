@@ -52,7 +52,7 @@ const Navbar = () => {
         <AppBar position="static">
             <Toolbar>
                 <Typography variant="h6" component={Link} to={token ? "/dashboard" : "/"} sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
-                    PrepTrack
+                    PrepTracker
                 </Typography>
 
                 <Stack direction="row" alignItems="center" spacing={1}>

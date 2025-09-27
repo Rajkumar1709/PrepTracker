@@ -4,6 +4,20 @@ import { AuthContext } from './AuthContext';
 
 export const ProgressContext = createContext();
 
+// Helper function
+const getPlatformFromUrl = (url) => {
+    try {
+        const hostname = new URL(url).hostname;
+        if (hostname.includes('leetcode')) return 'LeetCode';
+        if (hostname.includes('geeksforgeeks')) return 'GeeksforGeeks';
+        if (hostname.includes('hackerrank')) return 'HackerRank';
+        if (hostname.includes('interviewbit')) return 'InterviewBit';
+        return hostname;
+    } catch (e) {
+        return 'Unknown';
+    }
+};
+
 export const ProgressProvider = ({ children }) => {
     const [trackedProblems, setTrackedProblems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -12,8 +26,8 @@ export const ProgressProvider = ({ children }) => {
     useEffect(() => {
         const fetchTrackedProblems = async () => {
             if (token) {
+                setLoading(true);
                 try {
-                    setLoading(true);
                     const config = { headers: { Authorization: `Bearer ${token}` } };
                     const { data } = await axios.get('/api/problems', config);
                     setTrackedProblems(data);
@@ -41,21 +55,51 @@ export const ProgressProvider = ({ children }) => {
             )
         );
     };
+    
+    const trackProblem = async (problem, token) => {
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const problemData = {
+                title: problem.name,
+                platform: getPlatformFromUrl(problem.link),
+                link: problem.link,
+                category: problem.category,
+                difficulty: problem.level,
+                status: 'Not Attempted'
+            };
+            const { data: newProblem } = await axios.post('/api/problems', problemData, config);
+            addProblemToState(newProblem);
+            return { success: true, message: `'${problem.name}' was added to your list!` };
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to track problem.';
+            console.error(err);
+            return { success: false, message: errorMessage };
+        }
+    };
 
+    // --- THIS IS THE CORRECTED PART ---
     const analyticsData = useMemo(() => {
-        const statusCounts = { 'Solved': 0, 'Attempted': 0, 'Not Attempted': 0 };
+        const statusCountObject = { 'Solved': 0, 'Attempted': 0, 'Not Attempted': 0 };
         const difficultyCounts = { 'Easy': 0, 'Medium': 0, 'Hard': 0 };
 
         for (const problem of trackedProblems) {
-            if (problem.status) statusCounts[problem.status]++;
-
-            // Only count difficulty if the problem is SOLVED
+            if (problem.status) statusCountObject[problem.status]++;
             if (problem.status === 'Solved') {
                 if (problem.difficulty) difficultyCounts[problem.difficulty]++;
             }
         }
         
-        return { statusCounts, difficultyCounts };
+        return {
+            // Convert the status count object into an array
+            statusCounts: [
+                { name: 'Solved', value: statusCountObject.Solved },
+                { name: 'Attempted', value: statusCountObject.Attempted },
+                { name: 'Not Attempted', value: statusCountObject['Not Attempted'] },
+            ],
+            difficultyCounts,
+            totalTracked: trackedProblems.length,
+            totalSolved: statusCountObject.Solved,
+        };
     }, [trackedProblems]);
 
     const value = {
@@ -64,6 +108,7 @@ export const ProgressProvider = ({ children }) => {
         loading,
         addProblemToState,
         updateProblemStatus,
+        trackProblem,
     };
 
     return (

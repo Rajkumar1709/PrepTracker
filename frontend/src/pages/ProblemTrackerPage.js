@@ -25,6 +25,7 @@ import {
     Divider,
     Snackbar
 } from '@mui/material';
+import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import AddTaskIcon from '@mui/icons-material/AddTask';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -57,6 +58,11 @@ const getPlatformFromUrl = (url) => {
 };
 
 const ProblemTrackerPage = () => {
+    // State for the NEW Mandatory Problems section
+    const [mandatoryProblems, setMandatoryProblems] = useState([]);
+    const [mandatoryLoading, setMandatoryLoading] = useState(true);
+
+    // State for the Problem Browser section
     const [categories, setCategories] = useState([]);
     const [masterProblems, setMasterProblems] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -64,20 +70,31 @@ const ProblemTrackerPage = () => {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const { token } = useContext(AuthContext);
-    const { addProblemToState } = useContext(ProgressContext);
+    const { trackProblem } = useContext(ProgressContext);
+    const [difficultyFilter, setDifficultyFilter] = useState({ Easy: true, Medium: true, Hard: true });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-    const [difficultyFilter, setDifficultyFilter] = useState({
-        Easy: true,
-        Medium: true,
-        Hard: true,
-    });
+    // --- Data Fetching ---
 
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
+    // useEffect to fetch mandatory problems
+    useEffect(() => {
+        const fetchMandatory = async () => {
+            if (token) {
+                try {
+                    const config = { headers: { Authorization: `Bearer ${token}` } };
+                    const { data } = await axios.get('/api/mandatory-problems', config);
+                    setMandatoryProblems(data);
+                } catch (error) {
+                    console.error('Failed to fetch mandatory problems', error);
+                } finally {
+                    setMandatoryLoading(false);
+                }
+            }
+        };
+        fetchMandatory();
+    }, [token]);
 
+    // useEffect to fetch categories for the main browser
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -97,6 +114,7 @@ const ProblemTrackerPage = () => {
         fetchCategories();
     }, []);
 
+    // useEffect to fetch master problems when a category is selected
     useEffect(() => {
         const fetchMasterProblems = async () => {
             if (!selectedCategory) return;
@@ -115,6 +133,8 @@ const ProblemTrackerPage = () => {
         fetchMasterProblems();
     }, [selectedCategory]);
 
+    // --- Event Handlers and Derived State ---
+    
     const filteredProblems = useMemo(() =>
         masterProblems
             .filter(problem => difficultyFilter[problem.level])
@@ -122,44 +142,50 @@ const ProblemTrackerPage = () => {
         , [masterProblems, searchTerm, difficultyFilter]);
 
     const handleDifficultyChange = (event) => {
-        setDifficultyFilter({
-            ...difficultyFilter,
-            [event.target.name]: event.target.checked,
-        });
+        setDifficultyFilter({ ...difficultyFilter, [event.target.name]: event.target.checked });
     };
 
     const handleTrackProblem = async (problem) => {
-        try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            const problemData = {
-                title: problem.name,
-                platform: getPlatformFromUrl(problem.link),
-                link: problem.link,
-                category: problem.category,
-                difficulty: problem.level,
-                status: 'Not Attempted'
-            };
-            const { data: newProblem } = await axios.post('/api/problems', problemData, config);
-            addProblemToState(newProblem);
-            setSnackbar({ open: true, message: `'${problem.name}' was added to your list!`, severity: 'success' });
-        } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Failed to track problem.';
-            setSnackbar({ open: true, message: errorMessage, severity: 'error' });
-            console.error(err);
-        }
+        const result = await trackProblem(problem, token);
+        setSnackbar({ open: true, message: result.message, severity: result.success ? 'success' : 'error' });
     };
     
     const handleSnackbarClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
+        if (reason === 'clickaway') return;
         setSnackbar({ ...snackbar, open: false });
     };
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            {/* --- MANDATORY PROBLEMS SECTION --- */}
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                <StarIcon color="warning" fontSize="large" sx={{ mr: 1 }}/> Mandatory Problems
+            </Typography>
+            <Paper sx={{ p: 2, mb: 5 }}>
+                {mandatoryLoading ? <CircularProgress /> : (
+                    <Box sx={{ display: 'flex', overflowX: 'auto', pb: 2, '&::-webkit-scrollbar': { height: 8 }, '&::-webkit-scrollbar-thumb': { backgroundColor: 'primary.main', borderRadius: 4 } }}>
+                        {mandatoryProblems.map(problem => (
+                            <Card key={problem._id} sx={{ minWidth: 320, mr: 2, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                                <CardContent sx={{ flexGrow: 1 }}>
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography variant="body2" color="text.secondary">{problem.category}</Typography>
+                                        {getDifficultyChip(problem.level)}
+                                    </Stack>
+                                    <Typography sx={{ fontWeight: 500, mt: 1 }}>{problem.name}</Typography>
+                                </CardContent>
+                                <CardActions>
+                                    <Button size="small" component={Link} href={problem.link} target="_blank" startIcon={<OpenInNewIcon />}>View</Button>
+                                    <Button size="small" variant="contained" onClick={() => handleTrackProblem(problem)} startIcon={<AddTaskIcon />}>Track</Button>
+                                </CardActions>
+                            </Card>
+                        ))}
+                    </Box>
+                )}
+            </Paper>
+
+            {/* --- EXISTING PROBLEM BROWSER --- */}
             <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                DSA Problems for Placement Preparation
+               DSA PROBLEMS
             </Typography>
             <Grid container spacing={4}>
                 <Grid item xs={12} md={3}>
@@ -213,42 +239,22 @@ const ProblemTrackerPage = () => {
                                             backdropFilter: 'blur(10px)',
                                             border: '1px solid rgba(255, 255, 255, 0.1)',
                                             borderRadius: 3,
-                                            transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                                            '&:hover': {
-                                                transform: 'translateY(-5px)',
-                                                boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-                                            }
                                         }}
                                     >
                                         <CardContent sx={{ pb: 1 }}>
                                             <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                                                 <Box>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {getPlatformFromUrl(problem.link)}
-                                                    </Typography>
-                                                    <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
-                                                        {problem.name}
-                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">{getPlatformFromUrl(problem.link)}</Typography>
+                                                    <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>{problem.name}</Typography>
                                                 </Box>
                                                 {getDifficultyChip(problem.level)}
                                             </Stack>
                                         </CardContent>
                                         <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-                                            <Button
-                                                variant="text"
-                                                component={Link}
-                                                href={problem.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                startIcon={<OpenInNewIcon />}
-                                            >
+                                            <Button variant="text" component={Link} href={problem.link} target="_blank" rel="noopener noreferrer" startIcon={<OpenInNewIcon />}>
                                                 View Problem
                                             </Button>
-                                            <Button
-                                                variant="contained"
-                                                startIcon={<AddTaskIcon />}
-                                                onClick={() => handleTrackProblem(problem)}
-                                            >
+                                            <Button variant="contained" startIcon={<AddTaskIcon />} onClick={() => handleTrackProblem(problem)}>
                                                 Track
                                             </Button>
                                         </CardActions>

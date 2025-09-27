@@ -1,54 +1,48 @@
-import Problem from '../models/Problem.js'; // User's tracked problems
+import Problem from '../models/Problem.js';
+import MasterProblem from '../models/MasterProblem.js';
 
-// @desc    Get detailed user analytics data
-// @route   GET /api/analytics
-// @access  Private
 export const getAnalytics = async (req, res) => {
     try {
-        const userProblems = await Problem.find({ user: req.user.id });
+        const [userProblems, masterProblems] = await Promise.all([
+            Problem.find({ user: req.user.id }),
+            MasterProblem.find({})
+        ]);
 
-        // 1. Calculate Status Counts
-        const statusCounts = { Solved: 0, Attempted: 0, 'Not Attempted': 0 };
-        userProblems.forEach(p => {
-            if (p.status) statusCounts[p.status]++;
-        });
-
-        // 2. Calculate Difficulty Breakdown (Tracked vs. Solved)
+        const statusCountObject = { Solved: 0, Attempted: 0, 'Not Attempted': 0 };
         const difficultyData = {
             Easy: { tracked: 0, solved: 0 },
             Medium: { tracked: 0, solved: 0 },
             Hard: { tracked: 0, solved: 0 },
         };
+        const categoryData = {};
+
         userProblems.forEach(p => {
+            if (p.status) statusCountObject[p.status]++;
             if (difficultyData[p.difficulty]) {
                 difficultyData[p.difficulty].tracked++;
                 if (p.status === 'Solved') {
                     difficultyData[p.difficulty].solved++;
                 }
             }
-        });
-        
-        // 3. Calculate Category Breakdown (Tracked vs. Solved)
-        const categoryData = {};
-        userProblems.forEach(p => {
-            if (!p.category) return; // Skip if no category
-            if (!categoryData[p.category]) {
-                categoryData[p.category] = { tracked: 0, solved: 0 };
-            }
-            categoryData[p.category].tracked++;
-            if (p.status === 'Solved') {
-                categoryData[p.category].solved++;
+            if (p.category) {
+                 if (!categoryData[p.category]) {
+                    categoryData[p.category] = { tracked: 0, solved: 0 };
+                }
+                categoryData[p.category].tracked++;
+                if (p.status === 'Solved') {
+                    categoryData[p.category].solved++;
+                }
             }
         });
 
-        // Structure the final response
         const analytics = {
             totalTracked: userProblems.length,
-            totalSolved: statusCounts.Solved,
+            totalSolved: statusCountObject.Solved,
+            // THIS IS THE FIX: Convert the status count object into an array
             statusCounts: [
-                { name: 'Solved', value: statusCounts.Solved },
-                { name: 'Attempted', value: statusCounts.Attempted },
-                { name: 'Not Attempted', value: statusCounts['Not Attempted'] },
+                { name: 'Solved', value: statusCountObject.Solved },
+                { name: 'Attempted', value: statusCountObject.Attempted },
+                { name: 'Not Attempted', value: statusCountObject['Not Attempted'] },
             ],
             difficultyData: [
                 { name: 'Easy', ...difficultyData.Easy },
@@ -59,7 +53,6 @@ export const getAnalytics = async (req, res) => {
         };
 
         res.status(200).json(analytics);
-
     } catch (error) {
         console.error('Error fetching analytics:', error);
         res.status(500).json({ message: 'Server error' });
