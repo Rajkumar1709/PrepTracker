@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box, Alert, IconButton, InputAdornment } from '@mui/material';
-import api from '../api/axiosConfig'; // Use the configured api object
+import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
@@ -35,10 +35,16 @@ const LoginPage = () => {
 
     return (
         <Container maxWidth="xs">
-            <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{
+                marginTop: { xs: 4, sm: 8 }, // Less margin on small screens
+                paddingX: { xs: 2, sm: 0 }, // Add horizontal padding on small screens
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+            }}>
                 <Typography component="h1" variant="h5">Sign In</Typography>
                 {error && <Alert severity="error" sx={{ width: '100%', mt: 2 }}>{error}</Alert>}
-                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
                     <TextField 
                         margin="normal" 
                         required 
