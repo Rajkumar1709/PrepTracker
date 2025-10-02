@@ -1,5 +1,3 @@
-// frontend/src/context/AuthContext.js
-
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 
@@ -14,21 +12,16 @@ export const AuthProvider = ({ children }) => {
         const fetchUser = async () => {
             if (token) {
                 try {
-                    const config = {
-                        headers: { Authorization: `Bearer ${token}` }
-                    };
-                    // This route needs to be created in the backend
+                    const config = { headers: { Authorization: `Bearer ${token}` } };
                     const res = await api.get('/api/users/me', config);
                     setUser(res.data);
                 } catch (err) {
                     console.error('Could not fetch user', err);
-                    // If token is invalid, log out
-                    logout();
+                    logout(); // Log out if token is invalid
                 }
             }
             setLoading(false);
         };
-
         fetchUser();
     }, [token]);
 
@@ -41,15 +34,15 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         setToken(null);
         setUser(null);
+
+        // NEW: Clear the saved compiler state on logout
+        sessionStorage.removeItem('compilerCode');
+        sessionStorage.removeItem('compilerLanguage');
+        sessionStorage.removeItem('compilerInput');
+        sessionStorage.removeItem('compilerOutput');
     };
 
-    const authContextValue = {
-        token,
-        user,
-        loading,
-        login,
-        logout,
-    };
+    const authContextValue = { token, user, loading, login, logout };
 
     return (
         <AuthContext.Provider value={authContextValue}>

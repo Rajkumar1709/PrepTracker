@@ -24,9 +24,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import WorkIcon from '@mui/icons-material/Work';
+import CodeIcon from '@mui/icons-material/Code'; // Import new icon
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Navbar = () => {
     const { token, logout } = useContext(AuthContext);
@@ -41,10 +42,12 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    // Add the new Compiler link to this array
     const navLinks = [
         { text: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
         { text: 'Problem Browser', path: '/tracker', icon: <ListAltIcon /> },
         { text: 'My Problems', path: '/my-problems', icon: <AccountCircleIcon /> },
+        { text: 'Compiler', path: '/compiler', icon: <CodeIcon /> }, // New link
         { text: 'Jobs', path: '/jobs', icon: <WorkIcon /> }
     ];
 

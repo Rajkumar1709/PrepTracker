@@ -12,6 +12,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import mandatoryProblemRoutes from './routes/mandatoryProblemRoutes.js';
 import dailyChallengeRoutes from './routes/dailyChallengeRoutes.js';
+import compilerRoutes from './routes/compilerRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,6 +30,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/mandatory-problems', mandatoryProblemRoutes);
 app.use('/api/daily-challenge', dailyChallengeRoutes);
+app.use('/api/compiler', compilerRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

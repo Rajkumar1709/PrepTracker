@@ -17,7 +17,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import MyProblemsPage from './pages/MyProblemsPage';
 import JobSearchPage from './pages/JobSearchPage';
-
+import CompilerPage from './pages/CompilerPage';
 
 function App() {
   // Get the loading status from your main contexts
@@ -47,6 +47,7 @@ function App() {
           <Route path="/tracker" element={<ProblemTrackerPage />} />
           <Route path="/my-problems" element={<MyProblemsPage />} />
           <Route path="/jobs" element={<JobSearchPage />} />
+          <Route path="/compiler" element={<CompilerPage />} />
         </Route>
       </Routes>
     </Router>
