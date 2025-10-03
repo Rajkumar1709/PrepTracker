@@ -1,5 +1,26 @@
 import React, { useContext, useState, useMemo, useEffect } from 'react';
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Link, Chip, Grid, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
+import {
+    Container,
+    Typography,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Checkbox,
+    Link,
+    Chip,
+    Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    IconButton,
+    Snackbar,
+    Alert
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ProgressContext } from '../context/ProgressContext';
 import { AuthContext } from '../context/AuthContext';
@@ -32,6 +53,7 @@ const MyProblemsPage = () => {
     const [categoryFilter, setCategoryFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
     const [allCategories, setAllCategories] = useState(['All']);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
         const fetchAllCategories = async () => {
@@ -54,13 +76,18 @@ const MyProblemsPage = () => {
 
     const handleCheckboxChange = async (problem, isChecked) => {
         const newStatus = isChecked ? 'Solved' : 'Not Attempted';
+        const originalStatus = problem.status;
+
+        // Optimistic UI update
+        updateProblemStatus(problem._id, newStatus);
+
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await api.put(`/api/problems/${problem._id}`, { status: newStatus }, config);
-            updateProblemStatus(problem._id, newStatus);
         } catch (error) {
             console.error('Failed to update status', error);
-            alert('Could not update status.');
+            setSnackbar({ open: true, message: 'Could not update status.', severity: 'error' });
+            updateProblemStatus(problem._id, originalStatus); // Revert on error
         }
     };
 
@@ -70,11 +97,17 @@ const MyProblemsPage = () => {
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 await api.delete(`/api/problems/${problemId}`, config);
                 removeProblemFromState(problemId);
+                setSnackbar({ open: true, message: 'Problem untracked successfully.', severity: 'success' });
             } catch (error) {
                 console.error('Failed to untrack problem', error);
-                alert('Could not untrack problem.');
+                setSnackbar({ open: true, message: 'Could not untrack problem.', severity: 'error' });
             }
         }
+    };
+
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') return;
+        setSnackbar({ ...snackbar, open: false });
     };
 
     return (
@@ -150,6 +183,16 @@ const MyProblemsPage = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

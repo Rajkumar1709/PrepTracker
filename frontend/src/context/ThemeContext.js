@@ -5,28 +5,52 @@ import { createTheme } from '@mui/material/styles';
 export const ThemeContext = createContext();
 
 export const CustomThemeProvider = ({ children }) => {
-    // State to hold the current theme mode ('light' or 'dark')
-    // It reads the saved preference from localStorage or defaults to 'light'
     const [mode, setMode] = useState(localStorage.getItem('themeMode') || 'light');
 
-    // Function to toggle the theme
     const toggleTheme = () => {
         const newMode = mode === 'light' ? 'dark' : 'light';
         setMode(newMode);
-        localStorage.setItem('themeMode', newMode); // Save preference
+        localStorage.setItem('themeMode', newMode);
     };
 
-    // Create the MUI theme object based on the current mode
-    // useMemo ensures the theme is only recalculated when the mode changes
-    const theme = useMemo(
-        () =>
-            createTheme({
-                palette: {
-                    mode,
+    const theme = useMemo(() => {
+        // Define a custom palette for the light theme
+        const lightThemeOptions = {
+            palette: {
+                mode: 'light',
+                primary: {
+                    main: '#1976d2', // Default blue
                 },
-            }),
-        [mode]
-    );
+                secondary: {
+                    main: '#dc004e', // A contrasting pink/red
+                },
+                background: {
+                    default: '#f4f6f8', // A slightly grey background
+                    paper: '#ffffff',   // White for cards and surfaces
+                },
+            },
+        };
+
+        // Define options for the dark theme (can be customized too)
+        const darkThemeOptions = {
+            palette: {
+                mode: 'dark',
+                primary: {
+                    main: '#90caf9', // Lighter blue for dark mode
+                },
+                secondary: {
+                    main: '#f48fb1', // Lighter pink for dark mode
+                },
+                background: {
+                    default: '#121212',
+                    paper: '#1e1e1e',
+                },
+            },
+        };
+
+        // Create the theme based on the current mode
+        return createTheme(mode === 'light' ? lightThemeOptions : darkThemeOptions);
+    }, [mode]);
 
     return (
         <ThemeContext.Provider value={{ mode, toggleTheme, theme }}>

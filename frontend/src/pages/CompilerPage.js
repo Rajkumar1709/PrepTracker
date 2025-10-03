@@ -1,10 +1,26 @@
 import React, { useState, useContext } from 'react';
-import { Container, Typography, Select, MenuItem, Button, Box, Paper, CircularProgress, TextField, IconButton } from '@mui/material';
+import {
+    Container,
+    Select,
+    MenuItem,
+    Button,
+    Box,
+    Paper,
+    CircularProgress,
+    Typography,
+    IconButton,
+    useTheme,
+    TextField,
+    useMediaQuery
+} from '@mui/material';
 import Editor from '@monaco-editor/react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
 
 // Judge0 Language IDs
 const LANGUAGE_OPTIONS = {
@@ -14,53 +30,29 @@ const LANGUAGE_OPTIONS = {
     'C': 50
 };
 
-// NEW: Boilerplate code for each language
+// Boilerplate code for each language
 const BOILERPLATE_CODE = {
-    'Python': `def main():
-    # Write your code here
-    print("Hello, Python!")
-
-if __name__ == "__main__":
-    main()`,
-    'Java': `public class Main {
-    public static void main(String[] args) {
-        // Write your code here
-        System.out.println("Hello, Java!");
-    }
-}`,
-    'C++': `#include <iostream>
-
-int main() {
-    // Write your code here
-    std::cout << "Hello, C++!";
-    return 0;
-}`,
-    'C': `#include <stdio.h>
-
-int main() {
-    // Write your code here
-    printf("Hello, C!");
-    return 0;
-}`
+    'Python': `def main():\n    # Read input using input()\n    # Example: name = input()\n    print("Hello, Python!")\n\nif __name__ == "__main__":\n    main()`,
+    'Java': `import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        // Read input using Scanner\n        // Scanner scanner = new Scanner(System.in);\n        System.out.println("Hello, Java!");\n    }\n}`,
+    'C++': `#include <iostream>\n\nint main() {\n    // Read input using std::cin\n    std::cout << "Hello, C++!";\n    return 0;\n}`,
+    'C': `#include <stdio.h>\n\nint main() {\n    // Read input using scanf\n    printf("Hello, C!");\n    return 0;\n}`
 };
-
 
 const CompilerPage = () => {
     const [language, setLanguage] = useState(() => sessionStorage.getItem('compilerLanguage') || 'Python');
     const [code, setCode] = useState(() => sessionStorage.getItem('compilerCode') || BOILERPLATE_CODE['Python']);
     const [input, setInput] = useState(() => sessionStorage.getItem('compilerInput') || '');
-    const [output, setOutput] = useState(() => sessionStorage.getItem('compilerOutput') || '');
+    const [output, setOutput] = useState(() => sessionStorage.getItem('compilerOutput') || 'Click "Run" to see the output here.');
     const [isLoading, setIsLoading] = useState(false);
     const [fontSize, setFontSize] = useState(14);
     const { token } = useContext(AuthContext);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    // UPDATED: This handler now sets the boilerplate code
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
         setLanguage(newLang);
         sessionStorage.setItem('compilerLanguage', newLang);
-        
-        // Set the boilerplate for the new language
         const newBoilerplate = BOILERPLATE_CODE[newLang];
         setCode(newBoilerplate);
         sessionStorage.setItem('compilerCode', newBoilerplate);
@@ -79,7 +71,7 @@ const CompilerPage = () => {
 
     const handleRun = async () => {
         setIsLoading(true);
-        setOutput('');
+        setOutput('Running your code...');
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const payload = {
@@ -100,43 +92,94 @@ const CompilerPage = () => {
         }
     };
 
-    return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h4" gutterBottom>Practice Compiler</Typography>
-            <Paper sx={{ p: 2, position: 'relative' }}>
-                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Select value={language} onChange={handleLanguageChange}>
-                        {Object.keys(LANGUAGE_OPTIONS).map(lang => (
-                            <MenuItem key={lang} value={lang}>{lang}</MenuItem>
-                        ))}
-                    </Select>
-                    <Button variant="contained" onClick={handleRun} disabled={isLoading}>
-                        {isLoading ? <CircularProgress size={24} /> : 'Run Code'}
-                    </Button>
-                </Box>
-                
-                <Box sx={{ position: 'absolute', top: 18, right: 18, zIndex: 1 }}>
-                    <IconButton size="small" onClick={() => setFontSize(prev => prev + 1)}>
-                        <AddIcon />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => setFontSize(prev => Math.max(10, prev - 1))}>
-                        <RemoveIcon />
-                    </IconButton>
-                </Box>
+    const headerControls = (
+        <Paper square elevation={2} sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
+            <Select size="small" value={language} onChange={handleLanguageChange}>
+                {Object.keys(LANGUAGE_OPTIONS).map(lang => (<MenuItem key={lang} value={lang}>{lang}</MenuItem>))}
+            </Select>
+            <Button 
+                variant="contained" 
+                color="success" 
+                onClick={handleRun} 
+                disabled={isLoading} 
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
+            >
+                Run
+            </Button>
+            <Box sx={{ ml: 'auto' }}>
+                <IconButton title="Increase font size" size="small" onClick={() => setFontSize(prev => prev + 1)}>
+                    <AddIcon fontSize="small" />
+                </IconButton>
+                <IconButton title="Decrease font size" size="small" onClick={() => setFontSize(prev => Math.max(10, prev - 1))}>
+                    <RemoveIcon fontSize="small" />
+                </IconButton>
+            </Box>
+        </Paper>
+    );
 
-                <Editor
-                    height="50vh"
-                    language={language.toLowerCase()}
-                    theme="vs-dark"
-                    value={code}
-                    onChange={handleCodeChange}
-                    options={{ fontSize: fontSize }}
-                />
-                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                    <TextField label="Input (stdin)" multiline rows={4} variant="outlined" fullWidth value={input} onChange={handleInputChange} />
-                    <TextField label="Output" multiline rows={4} variant="outlined" fullWidth value={output} InputProps={{ readOnly: true }} />
-                </Box>
-            </Paper>
+    const editorPane = (
+        <Editor
+            language={language.toLowerCase()}
+            theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'light'}
+            value={code}
+            onChange={handleCodeChange}
+            options={{ fontSize: fontSize }}
+        />
+    );
+
+    const inputPane = (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="overline" sx={{ px: 2, pt: 1, color: 'text.secondary' }}>Input (stdin)</Typography>
+            <TextField
+                multiline
+                fullWidth
+                variant="outlined"
+                value={input}
+                onChange={handleInputChange}
+                sx={{
+                    flexGrow: 1,
+                    '& .MuiOutlinedInput-root': { height: '100%', alignItems: 'flex-start', borderRadius: 0, border: 'none' },
+                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                    '& textarea': { fontFamily: 'monospace' }
+                }}
+            />
+        </Box>
+    );
+
+    const outputPane = (
+        <Box sx={{ height: '100%', p: 2, bgcolor: theme.palette.mode === 'dark' ? '#1E1E1E' : '#fafafa', color: 'text.primary', overflowY: 'auto', fontFamily: 'monospace' }}>
+            <Typography variant="overline">Output</Typography>
+            <Box component="pre" sx={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', margin: 0, fontSize: 14 }}>
+                {output}
+            </Box>
+        </Box>
+    );
+
+    return (
+        <Container 
+            maxWidth={false} 
+            sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', p: '0 !important' }}
+        >
+            {headerControls}
+            <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                {isMobile ? (
+                    <Allotment vertical>
+                        <Allotment.Pane preferredSize="60%">{editorPane}</Allotment.Pane>
+                        <Allotment.Pane preferredSize="20%">{inputPane}</Allotment.Pane>
+                        <Allotment.Pane preferredSize="20%">{outputPane}</Allotment.Pane>
+                    </Allotment>
+                ) : (
+                    <Allotment>
+                        <Allotment.Pane minSize={400}>{editorPane}</Allotment.Pane>
+                        <Allotment.Pane>
+                            <Allotment vertical>
+                                <Allotment.Pane snap>{inputPane}</Allotment.Pane>
+                                <Allotment.Pane>{outputPane}</Allotment.Pane>
+                            </Allotment>
+                        </Allotment.Pane>
+                    </Allotment>
+                )}
+            </Box>
         </Container>
     );
 };
