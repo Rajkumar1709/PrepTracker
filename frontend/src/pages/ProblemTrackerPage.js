@@ -1,9 +1,30 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import {
-    Container, Typography, Box, CircularProgress, Alert, Grid, Paper,
-    List, ListItemButton, ListItemText, TextField, InputAdornment, Card,
-    CardContent, CardActions, Button, Chip, Link, Stack, FormGroup,
-    FormControlLabel, Checkbox, Divider, Snackbar
+    Container,
+    Typography,
+    Box,
+    CircularProgress,
+    Alert,
+    Grid,
+    Paper,
+    List,
+    ListItemButton,
+    ListItemText,
+    TextField,
+    InputAdornment,
+    Card,
+    CardContent,
+    CardActions,
+    Button,
+    Chip,
+    Link,
+    Stack,
+    FormGroup,
+    FormControlLabel,
+    Checkbox,
+    Divider,
+    Snackbar,
+    useTheme
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
@@ -13,6 +34,7 @@ import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { ProgressContext } from '../context/ProgressContext';
 
+// --- ADD THIS BACK ---
 // Helper for difficulty chips
 const getDifficultyChip = (level) => {
     switch (level) {
@@ -23,6 +45,7 @@ const getDifficultyChip = (level) => {
     }
 };
 
+// --- AND ADD THIS BACK ---
 // Helper to get the platform name from a URL
 const getPlatformFromUrl = (url) => {
     try {
@@ -37,7 +60,9 @@ const getPlatformFromUrl = (url) => {
     }
 };
 
+
 const ProblemTrackerPage = () => {
+    const theme = useTheme();
     const [mandatoryProblems, setMandatoryProblems] = useState([]);
     const [mandatoryLoading, setMandatoryLoading] = useState(true);
     const [categories, setCategories] = useState([]);
@@ -211,9 +236,9 @@ const ProblemTrackerPage = () => {
                                             key={problem._id} 
                                             variant="outlined"
                                             sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(145, 158, 171, 0.08)' : 'background.paper',
                                                 backdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : theme.palette.divider}`,
                                                 borderRadius: 3,
                                             }}
                                         >
