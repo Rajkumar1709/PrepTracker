@@ -5,7 +5,8 @@ import api from '../api/axiosConfig';
 import { AuthContext } from '../context/AuthContext';
 import { ProgressContext } from '../context/ProgressContext';
 
-// --- Reusable Chart Components (No Changes) ---
+// --- Reusable Chart Components ---
+
 const StatusPieChart = ({ data }) => {
     const theme = useTheme();
     const COLORS = [theme.palette.success.main, theme.palette.warning.main, theme.palette.grey[500]];
@@ -31,14 +32,15 @@ const DifficultyBarChart = ({ data }) => {
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="tracked" fill={theme.palette.text.secondary} name="Tracked" />
+                {/* UPDATED: Changed fill color to a more visible grey */}
+                <Bar dataKey="tracked" fill={theme.palette.grey[500]} name="Tracked" />
                 <Bar dataKey="solved" fill={theme.palette.primary.main} name="Solved" />
             </BarChart>
         </ResponsiveContainer>
     );
 };
 
-// --- Helper for difficulty chips (No Changes) ---
+// --- Helper for difficulty chips ---
 const getDifficultyChip = (level) => {
     switch (level) {
         case 'Easy': return <Chip label="Easy" color="success" size="small" />;
@@ -52,10 +54,7 @@ const getDifficultyChip = (level) => {
 
 const Dashboard = () => {
     const { token, user } = useContext(AuthContext);
-    // SIMPLIFIED: Get all necessary data and loading state directly from the ProgressContext
     const { analyticsData, loading: progressLoading, trackProblem, trackedProblems } = useContext(ProgressContext);
-
-    // This state is only for the daily challenge, which is fetched separately
     const [dailyChallenge, setDailyChallenge] = useState(null);
     const [challengeLoading, setChallengeLoading] = useState(true);
 
@@ -78,13 +77,11 @@ const Dashboard = () => {
         fetchChallenge();
     }, [token]);
 
-    // SIMPLIFIED: The main loading state now correctly depends on both fetches
     if (progressLoading || challengeLoading) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
     }
     
-    // The '!analyticsData' check is now more robust
-    if (!analyticsData || !analyticsData.statusCounts || !analyticsData.difficultyData) {
+    if (!analyticsData) {
         return <Typography sx={{ textAlign: 'center', mt: 4 }}>Could not load analytics data.</Typography>;
     }
     
@@ -126,7 +123,6 @@ const Dashboard = () => {
                         ) : <Typography sx={{ mt: 2 }}>No challenge available today. Check back tomorrow!</Typography>}
                     </Paper>
                 </Grid>
-
                 <Grid item xs={12} sm={6} md={4}>
                     <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
                         <Typography variant="h6" color="text.secondary">Total Problems Tracked</Typography>
@@ -145,7 +141,6 @@ const Dashboard = () => {
                         <Typography variant="h3" component="div">{analyticsData.totalTracked > 0 ? `${((analyticsData.totalSolved / analyticsData.totalTracked) * 100).toFixed(1)}%` : '0.0%'}</Typography>
                     </Paper>
                 </Grid>
-
                 <Grid item xs={12} md={5}>
                     <Paper sx={{ p: 2, height: 350 }}>
                         <Typography variant="h6" align="center" gutterBottom>Status Breakdown</Typography>
