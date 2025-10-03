@@ -1,5 +1,6 @@
 import React, { useContext, useState, useMemo, useEffect } from 'react';
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Link, Chip, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Link, Chip, Grid, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { ProgressContext } from '../context/ProgressContext';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
@@ -24,7 +25,7 @@ const getStatusChip = (status) => {
 };
 
 const MyProblemsPage = () => {
-    const { trackedProblems, updateProblemStatus } = useContext(ProgressContext);
+    const { trackedProblems, updateProblemStatus, removeProblemFromState } = useContext(ProgressContext);
     const { token } = useContext(AuthContext);
 
     const [difficultyFilter, setDifficultyFilter] = useState('All');
@@ -35,7 +36,6 @@ const MyProblemsPage = () => {
     useEffect(() => {
         const fetchAllCategories = async () => {
             try {
-                // This fetches ALL possible categories for the filter dropdown
                 const { data } = await api.get('/api/master-problems/categories');
                 setAllCategories(['All', ...data.sort()]);
             } catch (error) {
@@ -64,10 +64,22 @@ const MyProblemsPage = () => {
         }
     };
 
+    const handleUntrack = async (problemId) => {
+        if (window.confirm('Are you sure you want to untrack this problem?')) {
+            try {
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await api.delete(`/api/problems/${problemId}`, config);
+                removeProblemFromState(problemId);
+            } catch (error) {
+                console.error('Failed to untrack problem', error);
+                alert('Could not untrack problem.');
+            }
+        }
+    };
+
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" gutterBottom>My Tracked Problems</Typography>
-
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={4}>
@@ -102,7 +114,6 @@ const MyProblemsPage = () => {
                     </Grid>
                 </Grid>
             </Paper>
-
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -113,6 +124,7 @@ const MyProblemsPage = () => {
                             <TableCell>Difficulty</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Link</TableCell>
+                            <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -127,6 +139,11 @@ const MyProblemsPage = () => {
                                 <TableCell>{getStatusChip(problem.status)}</TableCell>
                                 <TableCell>
                                     <Link href={problem.link} target="_blank" rel="noopener noreferrer">View</Link>
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton onClick={() => handleUntrack(problem._id)} color="error">
+                                        <DeleteIcon />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}

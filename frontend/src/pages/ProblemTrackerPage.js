@@ -1,29 +1,9 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import {
-    Container,
-    Typography,
-    Box,
-    CircularProgress,
-    Alert,
-    Grid,
-    Paper,
-    List,
-    ListItemButton,
-    ListItemText,
-    TextField,
-    InputAdornment,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    Chip,
-    Link,
-    Stack,
-    FormGroup,
-    FormControlLabel,
-    Checkbox,
-    Divider,
-    Snackbar
+    Container, Typography, Box, CircularProgress, Alert, Grid, Paper,
+    List, ListItemButton, ListItemText, TextField, InputAdornment, Card,
+    CardContent, CardActions, Button, Chip, Link, Stack, FormGroup,
+    FormControlLabel, Checkbox, Divider, Snackbar
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
@@ -58,11 +38,8 @@ const getPlatformFromUrl = (url) => {
 };
 
 const ProblemTrackerPage = () => {
-    // State for the NEW Mandatory Problems section
     const [mandatoryProblems, setMandatoryProblems] = useState([]);
     const [mandatoryLoading, setMandatoryLoading] = useState(true);
-
-    // State for the Problem Browser section
     const [categories, setCategories] = useState([]);
     const [masterProblems, setMasterProblems] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -70,13 +47,12 @@ const ProblemTrackerPage = () => {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const { token } = useContext(AuthContext);
-    const { trackProblem } = useContext(ProgressContext);
+    const { trackProblem, trackedProblems } = useContext(ProgressContext);
     const [difficultyFilter, setDifficultyFilter] = useState({ Easy: true, Medium: true, Hard: true });
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-    // --- Data Fetching ---
+    const trackedTitles = useMemo(() => new Set(trackedProblems.map(p => p.title)), [trackedProblems]);
 
-    // useEffect to fetch mandatory problems
     useEffect(() => {
         const fetchMandatory = async () => {
             if (token) {
@@ -94,7 +70,6 @@ const ProblemTrackerPage = () => {
         fetchMandatory();
     }, [token]);
 
-    // useEffect to fetch categories for the main browser
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -114,7 +89,6 @@ const ProblemTrackerPage = () => {
         fetchCategories();
     }, []);
 
-    // useEffect to fetch master problems when a category is selected
     useEffect(() => {
         const fetchMasterProblems = async () => {
             if (!selectedCategory) return;
@@ -133,8 +107,6 @@ const ProblemTrackerPage = () => {
         fetchMasterProblems();
     }, [selectedCategory]);
 
-    // --- Event Handlers and Derived State ---
-    
     const filteredProblems = useMemo(() =>
         masterProblems
             .filter(problem => difficultyFilter[problem.level])
@@ -157,35 +129,37 @@ const ProblemTrackerPage = () => {
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            {/* --- MANDATORY PROBLEMS SECTION --- */}
             <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
                 <StarIcon color="warning" fontSize="large" sx={{ mr: 1 }}/> Mandatory Problems
             </Typography>
             <Paper sx={{ p: 2, mb: 5 }}>
                 {mandatoryLoading ? <CircularProgress /> : (
                     <Box sx={{ display: 'flex', overflowX: 'auto', pb: 2, '&::-webkit-scrollbar': { height: 8 }, '&::-webkit-scrollbar-thumb': { backgroundColor: 'primary.main', borderRadius: 4 } }}>
-                        {mandatoryProblems.map(problem => (
-                            <Card key={problem._id} sx={{ minWidth: 320, mr: 2, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Stack direction="row" justifyContent="space-between">
-                                        <Typography variant="body2" color="text.secondary">{problem.category}</Typography>
-                                        {getDifficultyChip(problem.level)}
-                                    </Stack>
-                                    <Typography sx={{ fontWeight: 500, mt: 1 }}>{problem.name}</Typography>
-                                </CardContent>
-                                <CardActions>
-                                    <Button size="small" component={Link} href={problem.link} target="_blank" startIcon={<OpenInNewIcon />}>View</Button>
-                                    <Button size="small" variant="contained" onClick={() => handleTrackProblem(problem)} startIcon={<AddTaskIcon />}>Track</Button>
-                                </CardActions>
-                            </Card>
-                        ))}
+                        {mandatoryProblems.map(problem => {
+                            const isTracked = trackedTitles.has(problem.name);
+                            return (
+                                <Card key={problem._id} sx={{ minWidth: 320, mr: 2, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                                    <CardContent sx={{ flexGrow: 1 }}>
+                                        <Stack direction="row" justifyContent="space-between">
+                                            <Typography variant="body2" color="text.secondary">{problem.category}</Typography>
+                                            {getDifficultyChip(problem.level)}
+                                        </Stack>
+                                        <Typography sx={{ fontWeight: 500, mt: 1 }}>{problem.name}</Typography>
+                                    </CardContent>
+                                    <CardActions>
+                                        <Button size="small" component={Link} href={problem.link} target="_blank" startIcon={<OpenInNewIcon />}>View</Button>
+                                        <Button size="small" variant="contained" onClick={() => handleTrackProblem(problem)} disabled={isTracked} sx={isTracked ? { backgroundColor: 'info.light' } : {}}>
+                                            {isTracked ? 'Tracked' : 'Track'}
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            )
+                        })}
                     </Box>
                 )}
             </Paper>
-
-            {/* --- EXISTING PROBLEM BROWSER --- */}
             <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-               DSA PROBLEMS
+                Problem Browser
             </Typography>
             <Grid container spacing={4}>
                 <Grid item xs={12} md={3}>
@@ -230,36 +204,45 @@ const ProblemTrackerPage = () => {
                     ) : (
                         <Stack spacing={2}>
                             {filteredProblems.length > 0 ? (
-                                filteredProblems.map(problem => (
-                                    <Card 
-                                        key={problem._id} 
-                                        variant="outlined"
-                                        sx={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 3,
-                                        }}
-                                    >
-                                        <CardContent sx={{ pb: 1 }}>
-                                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                                <Box>
-                                                    <Typography variant="body2" color="text.secondary">{getPlatformFromUrl(problem.link)}</Typography>
-                                                    <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>{problem.name}</Typography>
-                                                </Box>
-                                                {getDifficultyChip(problem.level)}
-                                            </Stack>
-                                        </CardContent>
-                                        <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-                                            <Button variant="text" component={Link} href={problem.link} target="_blank" rel="noopener noreferrer" startIcon={<OpenInNewIcon />}>
-                                                View Problem
-                                            </Button>
-                                            <Button variant="contained" startIcon={<AddTaskIcon />} onClick={() => handleTrackProblem(problem)}>
-                                                Track
-                                            </Button>
-                                        </CardActions>
-                                    </Card>
-                                ))
+                                filteredProblems.map(problem => {
+                                    const isTracked = trackedTitles.has(problem.name);
+                                    return (
+                                        <Card 
+                                            key={problem._id} 
+                                            variant="outlined"
+                                            sx={{
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 3,
+                                            }}
+                                        >
+                                            <CardContent sx={{ pb: 1 }}>
+                                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                    <Box>
+                                                        <Typography variant="body2" color="text.secondary">{getPlatformFromUrl(problem.link)}</Typography>
+                                                        <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>{problem.name}</Typography>
+                                                    </Box>
+                                                    {getDifficultyChip(problem.level)}
+                                                </Stack>
+                                            </CardContent>
+                                            <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                                                <Button variant="text" component={Link} href={problem.link} target="_blank" rel="noopener noreferrer" startIcon={<OpenInNewIcon />}>
+                                                    View Problem
+                                                </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    startIcon={<AddTaskIcon />}
+                                                    onClick={() => handleTrackProblem(problem)}
+                                                    disabled={isTracked}
+                                                    sx={isTracked ? { backgroundColor: 'info.light' } : {}}
+                                                >
+                                                    {isTracked ? 'Tracked' : 'Track'}
+                                                </Button>
+                                            </CardActions>
+                                        </Card>
+                                    )
+                                })
                             ) : (
                                 <Typography sx={{ textAlign: 'center', mt: 4, color: 'text.secondary' }}>
                                     No problems found for the selected filters.

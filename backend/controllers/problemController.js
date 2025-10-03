@@ -54,3 +54,22 @@ export const updateProblem = async (req, res) => {
     const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(updatedProblem);
 };
+
+// @desc    Delete a tracked problem
+// @route   DELETE /api/problems/:id
+// @access  Private
+export const deleteProblem = async (req, res) => {
+    const problem = await Problem.findById(req.params.id);
+
+    if (!problem) {
+        return res.status(404).json({ message: 'Problem not found' });
+    }
+
+    // Make sure the logged-in user owns the problem
+    if (problem.user.toString() !== req.user.id) {
+        return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    await problem.deleteOne(); // Use deleteOne() or remove()
+    res.status(200).json({ id: req.params.id, message: 'Problem removed' });
+};
